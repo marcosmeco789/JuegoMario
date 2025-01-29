@@ -3,34 +3,42 @@ package com.marcos.mario.Screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.maps.MapObject;
-import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.marcos.mario.Main;
 import com.marcos.mario.Scenes.Hud;
+import com.marcos.mario.Sprites.Enemies.Enemigo;
+import com.marcos.mario.Sprites.Items.Item;
+import com.marcos.mario.Sprites.Items.ItemDef;
+import com.marcos.mario.Sprites.Items.Mushroom;
 import com.marcos.mario.Sprites.Mario;
+import com.marcos.mario.Sprites.TileObjects.Ladrillo;
+import com.marcos.mario.Sprites.TileObjects.Moneda;
 import com.marcos.mario.Tools.B2WorldCreator;
 import com.marcos.mario.Tools.WorldContactListener;
+
+import java.util.PriorityQueue;
 
 public class PantallaJugar implements Screen {
     private Main game;
     private TextureAtlas atlas;
     private Mario player;
+
+    private Music music;
+
+    private Array<Item> items;
+    private PriorityQueue<ItemDef> itemsToSpawn;
+
     private OrthographicCamera gamecam;
     private Viewport gamePort;
     private Hud hud;
@@ -43,6 +51,7 @@ public class PantallaJugar implements Screen {
     // variables Box2d
     private World world;
     private Box2DDebugRenderer b2dr;
+    private B2WorldCreator creator;
 
     public PantallaJugar(Main game) {
         atlas = new TextureAtlas("Mario_and_Enemies.pack");
@@ -61,11 +70,32 @@ public class PantallaJugar implements Screen {
         world = new World(new Vector2(0, -10), true);
         b2dr = new Box2DDebugRenderer();
 
-        new B2WorldCreator(world, map);
+        creator = new B2WorldCreator(this);
 
-        player = new Mario(world, this);
+        player = new Mario(this);
 
         world.setContactListener(new WorldContactListener());
+
+        music = Main.manager.get("audio/music/mario_music.ogg", Music.class);
+        music.setLooping(true);
+        music.play();
+
+        items = new Array<Item>();
+        itemsToSpawn = new PriorityQueue<ItemDef>();
+    }
+
+    public void spawnItem(ItemDef idef) {
+        itemsToSpawn.add(idef);
+    }
+
+
+    public void handleSpawningItems() {
+        if (!itemsToSpawn.isEmpty()) {
+            ItemDef idef = itemsToSpawn.poll();
+            if (idef.type == Mushroom.class) {
+                items.add(new Mushroom(this, idef.position.x, idef.position.y));
+            }
+        }
     }
 
     public TextureAtlas getAtlas() {
@@ -101,10 +131,21 @@ public class PantallaJugar implements Screen {
 
     public void update(float dt) {
         handleInput(dt);
+        handleSpawningItems();
 
         world.step(1 / 60f, 6, 2);
 
         player.update(dt);
+        for (Enemigo enemigo : creator.getGoombas()) {
+            enemigo.update(dt);
+            if (enemigo.getX() < player.getX() + 224 / Main.PPM) {
+                enemigo.b2body.setActive(true);
+            }
+        }
+
+        for (Item item : items) {
+            item.update(dt);
+        }
         hud.update(dt);
 
         gamecam.position.x = player.b2body.getPosition().x;
@@ -128,16 +169,33 @@ public class PantallaJugar implements Screen {
         game.batch.setProjectionMatrix(gamecam.combined);
         game.batch.begin();
         player.draw(game.batch);
+        for (Enemigo enemigo : creator.getGoombas()) {
+            enemigo.draw(game.batch);
+        }
+
+        for (Item item : items) {
+            item.draw(game.batch);
+        }
         game.batch.end();
 
         game.batch.setProjectionMatrix(hud.stage.getCamera().combined);
         hud.stage.draw();
+
+
 
     }
 
     @Override
     public void resize(int width, int height) {
         gamePort.update(width, height);
+    }
+
+    public TiledMap getMap() {
+        return map;
+    }
+
+    public World getWorld() {
+        return world;
     }
 
     @Override
