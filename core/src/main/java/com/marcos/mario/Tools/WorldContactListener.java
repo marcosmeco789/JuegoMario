@@ -7,6 +7,8 @@ import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.marcos.mario.Main;
 import com.marcos.mario.Sprites.Enemies.Enemigo;
+import com.marcos.mario.Sprites.Items.Item;
+import com.marcos.mario.Sprites.Mario;
 import com.marcos.mario.Sprites.TileObjects.InteractiveTileObject;
 
 public class WorldContactListener implements ContactListener {
@@ -17,15 +19,14 @@ public class WorldContactListener implements ContactListener {
 
         int cDef = fixA.getFilterData().categoryBits | fixB.getFilterData().categoryBits;
 
-        if (fixA.getUserData() == "head" || fixB.getUserData() == "head") {
-            Fixture head = fixA.getUserData() == "head" ? fixA : fixB;
-            Fixture object = head == fixA ? fixB : fixA;
-
-            if (object.getUserData() != null && InteractiveTileObject.class.isAssignableFrom(object.getUserData().getClass())) {
-                ((InteractiveTileObject) object.getUserData()).onHeadHit();
-            }
-        }
         switch (cDef){
+            case Main.MARIO_HEAD_BIT | Main.BRICK_BIT:
+            case Main.MARIO_HEAD_BIT | Main.COIN_BIT:
+                if(fixA.getFilterData().categoryBits == Main.MARIO_HEAD_BIT)
+                    ((InteractiveTileObject) fixB.getUserData()).onHeadHit((Mario) fixA.getUserData());
+                else
+                    ((InteractiveTileObject) fixA.getUserData()).onHeadHit((Mario) fixB.getUserData());
+                break;
             case Main.ENEMY_HEAD_BIT | Main.MARIO_BIT:
                 if(fixA.getFilterData().categoryBits == Main.ENEMY_HEAD_BIT)
                     ((Enemigo) fixA.getUserData()).hitOnHead();
@@ -38,18 +39,29 @@ public class WorldContactListener implements ContactListener {
             case Main.ENEMY_BIT | Main.OBJECT_BIT:
                 if(fixA.getFilterData().categoryBits == Main.ENEMY_BIT)
                     ((Enemigo) fixA.getUserData()).reverseVelocity(true, false);
-                else if(fixB.getFilterData().categoryBits == Main.ENEMY_BIT)
+                else
                     ((Enemigo) fixB.getUserData()).reverseVelocity(true, false);
-                break;
-
-            case Main.MARIO_BIT | Main.ENEMY_BIT:
-
                 break;
 
             case Main.ENEMY_BIT | Main.ENEMY_BIT:
                 ((Enemigo) fixA.getUserData()).reverseVelocity(true, false);
                 ((Enemigo) fixB.getUserData()).reverseVelocity(true, false);
+                break;
 
+            case Main.ITEM_BIT | Main.OBJECT_BIT:
+                if(fixA.getFilterData().categoryBits == Main.ITEM_BIT)
+                    ((Item) fixA.getUserData()).reverseVelocity(true, false);
+                else
+                    ((Item) fixB.getUserData()).reverseVelocity(true, false);
+                break;
+
+            case Main.ITEM_BIT | Main.MARIO_BIT:
+                System.out.println("Collision");
+                if(fixA.getFilterData().categoryBits == Main.ITEM_BIT)
+                    ((Item) fixA.getUserData()).use((Mario) fixB.getUserData());
+                else
+                    ((Item) fixB.getUserData()).use((Mario) fixA.getUserData());
+                break;
         }
     }
 

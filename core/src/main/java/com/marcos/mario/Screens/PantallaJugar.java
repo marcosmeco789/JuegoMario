@@ -28,6 +28,7 @@ import com.marcos.mario.Tools.B2WorldCreator;
 import com.marcos.mario.Tools.WorldContactListener;
 
 import java.util.PriorityQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 
 public class PantallaJugar implements Screen {
     private Main game;
@@ -37,7 +38,7 @@ public class PantallaJugar implements Screen {
     private Music music;
 
     private Array<Item> items;
-    private PriorityQueue<ItemDef> itemsToSpawn;
+    private LinkedBlockingDeque<ItemDef> itemsToSpawn;
 
     private OrthographicCamera gamecam;
     private Viewport gamePort;
@@ -81,7 +82,7 @@ public class PantallaJugar implements Screen {
         music.play();
 
         items = new Array<Item>();
-        itemsToSpawn = new PriorityQueue<ItemDef>();
+        itemsToSpawn = new LinkedBlockingDeque<ItemDef>();
     }
 
     public void spawnItem(ItemDef idef) {
