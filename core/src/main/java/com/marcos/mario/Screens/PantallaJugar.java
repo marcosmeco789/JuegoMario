@@ -113,21 +113,22 @@ public class PantallaJugar implements Screen {
     public void handleInput(float dt){
         //control our player using immediate impulses
 
-        if (Gdx.input.isKeyPressed(Input.Keys.UP) && player.b2body.getLinearVelocity().y == 0 && !player.isJumping) {
-            player.b2body.applyLinearImpulse(new Vector2(0, 3.95f), player.b2body.getWorldCenter(), true);
-            player.isJumping = true;
-        }
-
+        if (player.currentState != Mario.State.DEAD){
+            if (Gdx.input.isKeyPressed(Input.Keys.UP) && player.b2body.getLinearVelocity().y == 0 && !player.isJumping) {
+                player.b2body.applyLinearImpulse(new Vector2(0, 3.95f), player.b2body.getWorldCenter(), true);
+                player.isJumping = true;
+            }
             if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) && player.b2body.getLinearVelocity().x <= 2)
                 player.b2body.applyLinearImpulse(new Vector2(0.1f, 0), player.b2body.getWorldCenter(), true);
 
             if (Gdx.input.isKeyPressed(Input.Keys.LEFT) && player.b2body.getLinearVelocity().x >= -2)
                 player.b2body.applyLinearImpulse(new Vector2(-0.1f, 0), player.b2body.getWorldCenter(), true);
 
-
-        if (player.b2body.getLinearVelocity().y == 0) {
-            player.isJumping = false;
+            if (player.b2body.getLinearVelocity().y == 0) {
+                player.isJumping = false;
+            }
         }
+
     }
 
     public void update(float dt) {
@@ -137,7 +138,7 @@ public class PantallaJugar implements Screen {
         world.step(1 / 60f, 6, 2);
 
         player.update(dt);
-        for (Enemigo enemigo : creator.getGoombas()) {
+        for (Enemigo enemigo : creator.getEnemigos()) {
             enemigo.update(dt);
             if (enemigo.getX() < player.getX() + 224 / Main.PPM) {
                 enemigo.b2body.setActive(true);
@@ -149,7 +150,9 @@ public class PantallaJugar implements Screen {
         }
         hud.update(dt);
 
-        gamecam.position.x = player.b2body.getPosition().x;
+        if (player.currentState != Mario.State.DEAD) {
+            gamecam.position.x = player.b2body.getPosition().x;
+        }
 
         gamecam.update();
         renderer.setView(gamecam);
@@ -170,7 +173,7 @@ public class PantallaJugar implements Screen {
         game.batch.setProjectionMatrix(gamecam.combined);
         game.batch.begin();
         player.draw(game.batch);
-        for (Enemigo enemigo : creator.getGoombas()) {
+        for (Enemigo enemigo : creator.getEnemigos()) {
             enemigo.draw(game.batch);
         }
 
@@ -182,8 +185,18 @@ public class PantallaJugar implements Screen {
         game.batch.setProjectionMatrix(hud.stage.getCamera().combined);
         hud.stage.draw();
 
+        if (gameOver()) {
+            game.setScreen(new PantallaGameOver(game));
+            dispose();
+        }
 
+    }
 
+    public boolean gameOver() {
+        if (player.currentState == Mario.State.DEAD && player.getStateTimer() > 2) {
+            return true;
+        }
+        return false;
     }
 
     @Override

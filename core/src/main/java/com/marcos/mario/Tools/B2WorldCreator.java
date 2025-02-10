@@ -12,7 +12,9 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.marcos.mario.Main;
 import com.marcos.mario.Screens.PantallaJugar;
+import com.marcos.mario.Sprites.Enemies.Enemigo;
 import com.marcos.mario.Sprites.Enemies.Goomba;
+import com.marcos.mario.Sprites.Enemies.Turtle;
 import com.marcos.mario.Sprites.TileObjects.Ladrillo;
 import com.marcos.mario.Sprites.TileObjects.Moneda;
 
@@ -20,6 +22,7 @@ import com.marcos.mario.Sprites.TileObjects.Moneda;
 
 public class B2WorldCreator {
     private Array<Goomba> goombas;
+    private Array<Turtle> turtles;
 
     public B2WorldCreator(PantallaJugar screen) {
         World world = screen.getWorld();
@@ -85,10 +88,24 @@ public class B2WorldCreator {
             goombas.add(new Goomba(screen, rect.getX() / Main.PPM, rect.getY() / Main.PPM));
         }
 
+        // creacion tortugas
+        turtles = new Array<Turtle>();
+        for (MapObject object : map.getLayers().get(7).getObjects().getByType(RectangleMapObject.class)) {
+            Rectangle rect = ((RectangleMapObject) object).getRectangle();
+            turtles.add(new Turtle(screen, rect.getX() / Main.PPM, rect.getY() / Main.PPM));
+        }
+
 
     }
 
     public Array<Goomba> getGoombas() {
         return goombas;
+    }
+
+    public Array<Enemigo> getEnemigos() {
+        Array<Enemigo> enemigos = new Array<Enemigo>();
+        enemigos.addAll(goombas);
+        enemigos.addAll(turtles);
+        return enemigos;
     }
 }

@@ -1,5 +1,6 @@
 package com.marcos.mario.Sprites.Enemies;
 
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -11,6 +12,7 @@ import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.utils.Array;
 import com.marcos.mario.Main;
 import com.marcos.mario.Screens.PantallaJugar;
+import com.marcos.mario.Sprites.Mario;
 
 public class Goomba extends Enemigo {
 
@@ -92,6 +94,7 @@ public class Goomba extends Enemigo {
     @Override
     public void hitOnHead() {
         setToDestroy = true;
+        Main.manager.get("audio/sounds/stomp.wav", Sound.class).play();
     }
 
 
