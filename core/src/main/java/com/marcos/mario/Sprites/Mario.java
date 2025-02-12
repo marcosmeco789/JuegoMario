@@ -17,6 +17,8 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.marcos.mario.Main;
 import com.marcos.mario.Screens.PantallaJugar;
+import com.marcos.mario.Sprites.Enemies.Enemigo;
+import com.marcos.mario.Sprites.Enemies.Turtle;
 
 public class Mario extends Sprite {
     public boolean isJumping;
@@ -157,7 +159,7 @@ public class Mario extends Sprite {
     public State getState() {
         if (marioIsDead)
             return State.DEAD;
-       else if (runGrowAnimation) {
+        else if (runGrowAnimation) {
             return State.GROWING;
         } else if (b2body.getLinearVelocity().y > 0 || (b2body.getLinearVelocity().y < 0 && previousState == State.JUMPING))
             return State.JUMPING;
@@ -171,11 +173,11 @@ public class Mario extends Sprite {
 
     public void grow() {
 
-            runGrowAnimation = true;
-            marioIsBig = true;
-            timeToDefineBigMario = true;
-            setBounds(getX(), getY(), getWidth(), getHeight() * 2);
-            Main.manager.get("audio/sounds/powerup_spawn.wav", Sound.class).play();
+        runGrowAnimation = true;
+        marioIsBig = true;
+        timeToDefineBigMario = true;
+        setBounds(getX(), getY(), getWidth(), getHeight() * 2);
+        Main.manager.get("audio/sounds/powerup_spawn.wav", Sound.class).play();
 
     }
 
@@ -187,25 +189,29 @@ public class Mario extends Sprite {
         return stateTimer;
     }
 
-    public void hit(){
-        if (marioIsBig){
-            marioIsBig = false;
-            timeToRedefineMario = true;
-            setBounds(getX(), getY(), getWidth(), getHeight() / 2);
-            Main.manager.get("audio/sounds/powerdown.wav", Sound.class).play();
+    public void hit(Enemigo enemigo) {
+        if (enemigo instanceof Turtle && ((Turtle) enemigo).getCurrentState() == Turtle.State.STANDING_SHELL) {
+            ((Turtle) enemigo).kick(this.getX() <= enemigo.getX() ? Turtle.KICK_RIGHT_SPEED : Turtle.KICK_LEFT_SPEED);
         } else {
-            Main.manager.get("audio/sounds/mariodie.wav", Sound.class).play();
-            marioIsDead = true;
-            Filter filter = new Filter();
-            filter.maskBits = Main.NOTHING_BIT;
-            for (Fixture fixture : b2body.getFixtureList())
-                fixture.setFilterData(filter);
-            b2body.applyLinearImpulse(new Vector2(0, 4f), b2body.getWorldCenter(), true);
+            if (marioIsBig) {
+                marioIsBig = false;
+                timeToRedefineMario = true;
+                setBounds(getX(), getY(), getWidth(), getHeight() / 2);
+                Main.manager.get("audio/sounds/powerdown.wav", Sound.class).play();
+            } else {
+                Main.manager.get("audio/sounds/mariodie.wav", Sound.class).play();
+                marioIsDead = true;
+                Filter filter = new Filter();
+                filter.maskBits = Main.NOTHING_BIT;
+                for (Fixture fixture : b2body.getFixtureList())
+                    fixture.setFilterData(filter);
+                b2body.applyLinearImpulse(new Vector2(0, 4f), b2body.getWorldCenter(), true);
+            }
         }
     }
 
 
-    public void redefineMario(){
+    public void redefineMario() {
         Vector2 position = b2body.getPosition();
         world.destroyBody(b2body);
 

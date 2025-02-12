@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
 import com.marcos.mario.Screens.PantallaJugar;
+import com.marcos.mario.Sprites.Mario;
 
 public abstract class Enemigo extends Sprite {
     protected World world;
@@ -23,7 +24,8 @@ public abstract class Enemigo extends Sprite {
 
     protected abstract void defineEnemigo();
     public abstract void update(float dt);
-    public abstract void hitOnHead();
+    public abstract void hitOnHead(Mario mario);
+    public abstract  void onEnemyHit(Enemigo enemigo);
 
 
     public void reverseVelocity(boolean x, boolean y) {
