@@ -5,11 +5,12 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.marcos.mario.Screens.PantallaJugar;
 import com.marcos.mario.Screens.PantallaMenu;
 
 public class Main extends Game {
     public static final int V_WIDTH = 400; // Ancho de la ventana
-    public static final int V_HEIGHT = 208; // Alto de la ventana
+    public static final int V_HEIGHT = 225; // Alto de la ventana
     public static final float PPM = 100;
 
     public static final short NOTHING_BIT = 0;
@@ -45,7 +46,7 @@ public class Main extends Game {
         manager.finishLoading();
 
 
-        setScreen(new PantallaMenu(this)); // Muestra la pantalla del menú
+        setScreen(new PantallaJugar(this)); // Muestra la pantalla del menú
     }
 
     @Override

@@ -59,13 +59,15 @@ public class PantallaJugar implements Screen {
 
         this.game = game;
         gamecam = new OrthographicCamera();
-        gamePort = new FitViewport(Main.V_WIDTH / Main.PPM, Main.V_HEIGHT / Main.PPM, gamecam);
+        // Ajusta el tamaño del FitViewport para abarcar los 19 patrones de alto
+        gamePort = new FitViewport(600/ Main.PPM, 300 / Main.PPM, gamecam);
         hud = new Hud(game.batch);
 
         mapLoader = new TmxMapLoader();
         map = mapLoader.load("level1.tmx");
         renderer = new OrthogonalTiledMapRenderer(map, 1 / Main.PPM);
 
+        // Centra la cámara en el jugador
         gamecam.position.set(gamePort.getWorldWidth() / 2, gamePort.getWorldHeight() / 2, 0);
 
         world = new World(new Vector2(0, -10), true);
@@ -131,6 +133,8 @@ public class PantallaJugar implements Screen {
 
     }
 
+    // core/src/main/java/com/marcos/mario/Screens/PantallaJugar.java
+
     public void update(float dt) {
         handleInput(dt);
         handleSpawningItems();
@@ -151,6 +155,7 @@ public class PantallaJugar implements Screen {
         hud.update(dt);
 
         if (player.currentState != Mario.State.DEAD) {
+            // Centra la cámara en el jugador y evita que se mueva verticalmente cuando salta
             gamecam.position.x = player.b2body.getPosition().x;
         }
 
