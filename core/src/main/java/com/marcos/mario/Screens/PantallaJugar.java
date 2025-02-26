@@ -17,6 +17,7 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.marcos.mario.Main;
 import com.marcos.mario.Scenes.Hud;
+import com.marcos.mario.Scenes.OnScreenControls;
 import com.marcos.mario.Sprites.Enemies.Enemigo;
 import com.marcos.mario.Sprites.Items.Item;
 import com.marcos.mario.Sprites.Items.ItemDef;
@@ -54,6 +55,10 @@ public class PantallaJugar implements Screen {
     private Box2DDebugRenderer b2dr;
     private B2WorldCreator creator;
 
+    // botones
+
+    private OnScreenControls onScreenControls;
+
     public PantallaJugar(Main game) {
         atlas = new TextureAtlas("Mario_and_Enemies.pack");
 
@@ -62,6 +67,9 @@ public class PantallaJugar implements Screen {
         // Ajusta el tamaño del FitViewport para abarcar los 19 patrones de alto
         gamePort = new FitViewport(600/ Main.PPM, 300 / Main.PPM, gamecam);
         hud = new Hud(game.batch);
+
+        // Inicializa los controles en pantalla
+        onScreenControls = new OnScreenControls(game.batch);
 
         mapLoader = new TmxMapLoader();
         map = mapLoader.load("level1.tmx");
@@ -91,7 +99,6 @@ public class PantallaJugar implements Screen {
         itemsToSpawn.add(idef);
     }
 
-
     public void handleSpawningItems() {
         if (!itemsToSpawn.isEmpty()) {
             ItemDef idef = itemsToSpawn.poll();
@@ -110,30 +117,56 @@ public class PantallaJugar implements Screen {
 
     }
 
-
-
-    public void handleInput(float dt){
-        //control our player using immediate impulses
-
-        if (player.currentState != Mario.State.DEAD){
-            if (Gdx.input.isKeyPressed(Input.Keys.UP) && player.b2body.getLinearVelocity().y == 0 && !player.isJumping) {
+    public void handleInput(float dt) {
+        if (player.currentState != Mario.State.DEAD) {
+            if (onScreenControls.isJumpPressed() && player.b2body.getLinearVelocity().y == 0 && !player.isJumping) {
                 player.b2body.applyLinearImpulse(new Vector2(0, 3.95f), player.b2body.getWorldCenter(), true);
                 player.isJumping = true;
             }
-            if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) && player.b2body.getLinearVelocity().x <= 2)
+            if (onScreenControls.isMoveRight() && player.b2body.getLinearVelocity().x <= 2) {
                 player.b2body.applyLinearImpulse(new Vector2(0.1f, 0), player.b2body.getWorldCenter(), true);
-
-            if (Gdx.input.isKeyPressed(Input.Keys.LEFT) && player.b2body.getLinearVelocity().x >= -2)
+            }
+            if (onScreenControls.isMoveLeft() && player.b2body.getLinearVelocity().x >= -2) {
                 player.b2body.applyLinearImpulse(new Vector2(-0.1f, 0), player.b2body.getWorldCenter(), true);
-
+            }
             if (player.b2body.getLinearVelocity().y == 0) {
                 player.isJumping = false;
             }
         }
-
     }
 
-    // core/src/main/java/com/marcos/mario/Screens/PantallaJugar.java
+    @Override
+    public void render(float delta) {
+        update(delta);
+        Gdx.gl.glClear(Gdx.gl.GL_COLOR_BUFFER_BIT);
+
+        renderer.render();
+        b2dr.render(world, gamecam.combined);
+
+        game.batch.setProjectionMatrix(gamecam.combined);
+        game.batch.begin();
+        player.draw(game.batch);
+        for (Enemigo enemigo : creator.getEnemigos()) {
+            enemigo.draw(game.batch);
+        }
+        for (Item item : items) {
+            item.draw(game.batch);
+        }
+        game.batch.end();
+
+        // Render HUD
+        game.batch.setProjectionMatrix(hud.stage.getCamera().combined);
+        hud.stage.draw();
+
+        // Render OnScreenControls last to ensure they are on top
+        game.batch.setProjectionMatrix(gamecam.combined);
+        onScreenControls.render(game.batch);
+
+        if (gameOver()) {
+            game.setScreen(new PantallaGameOver(game));
+            dispose();
+        }
+    }
 
     public void update(float dt) {
         handleInput(dt);
@@ -161,40 +194,6 @@ public class PantallaJugar implements Screen {
 
         gamecam.update();
         renderer.setView(gamecam);
-    }
-
-    @Override
-    public void render(float delta) {
-        update(delta);
-        Gdx.gl.glClearColor(0,0,0,1);
-        Gdx.gl.glClear(Gdx.gl.GL_COLOR_BUFFER_BIT);
-
-        //renderiza el mapa
-        renderer.render();
-
-        //renderiza Box2DDebugLines
-        b2dr.render(world, gamecam.combined);
-
-        game.batch.setProjectionMatrix(gamecam.combined);
-        game.batch.begin();
-        player.draw(game.batch);
-        for (Enemigo enemigo : creator.getEnemigos()) {
-            enemigo.draw(game.batch);
-        }
-
-        for (Item item : items) {
-            item.draw(game.batch);
-        }
-        game.batch.end();
-
-        game.batch.setProjectionMatrix(hud.stage.getCamera().combined);
-        hud.stage.draw();
-
-        if (gameOver()) {
-            game.setScreen(new PantallaGameOver(game));
-            dispose();
-        }
-
     }
 
     public boolean gameOver() {
