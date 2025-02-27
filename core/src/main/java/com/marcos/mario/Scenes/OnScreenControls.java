@@ -30,18 +30,20 @@ public class OnScreenControls {
         table.setFillParent(true);
 
         // Botones de movimiento
-        ImageButton leftButton = createButton("left_button.png", 80, 80);
+        ImageButton leftButton = createButton("ARROWLEFT.png", 50, 50);
         leftButton.addListener(new MovementListener(() -> moveLeft = true, () -> moveLeft = false));
-        ImageButton rightButton = createButton("left_button.png", 80, 80);
+        ImageButton rightButton = createButton("ARROWRIGHT.png", 50, 50);
         rightButton.addListener(new MovementListener(() -> moveRight = true, () -> moveRight = false));
 
         // Botón de acción (Saltar)
-        ImageButton jumpButton = createButton("up_button.png", 40, 40);
+        ImageButton jumpButton = createButton("ARROWUP.png", 50, 50);
         jumpButton.addListener(new MovementListener(() -> jumpPressed = true, () -> jumpPressed = false));
 
-        table.add(leftButton).size(80, 80).padRight(10);
-        table.add(rightButton).size(80, 80).padRight(10);
-        table.add(jumpButton).size(40, 40).padRight(10);
+        table.add(leftButton).size(50, 50).pad(10);
+        table.add().expandX(); // Empty cell to push the right button to the right
+        table.add(rightButton).size(50, 50).pad(10).row();
+        table.add().colspan(2); // Empty cell to align the jump button above the right button
+        table.add(jumpButton).size(50, 50).pad(10).padBottom(60);
 
         stage.addActor(table);
     }
