@@ -119,6 +119,8 @@ public class PantallaJugar implements Screen {
 
     public void handleInput(float dt) {
         if (player.currentState != Mario.State.DEAD) {
+            onScreenControls.handleKeyboardInput();
+
             if (onScreenControls.isJumpPressed() && player.b2body.getLinearVelocity().y == 0 && !player.isJumping) {
                 player.b2body.applyLinearImpulse(new Vector2(0, 3.95f), player.b2body.getWorldCenter(), true);
                 player.isJumping = true;

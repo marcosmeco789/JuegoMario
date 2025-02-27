@@ -1,6 +1,7 @@
 package com.marcos.mario.Scenes;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -30,20 +31,20 @@ public class OnScreenControls {
         table.setFillParent(true);
 
         // Botones de movimiento
-        ImageButton leftButton = createButton("ARROWLEFT.png", 50, 50);
+        ImageButton leftButton = createButton("ARROWLEFT.png", 40, 40);
         leftButton.addListener(new MovementListener(() -> moveLeft = true, () -> moveLeft = false));
-        ImageButton rightButton = createButton("ARROWRIGHT.png", 50, 50);
+        ImageButton rightButton = createButton("ARROWRIGHT.png", 40, 40);
         rightButton.addListener(new MovementListener(() -> moveRight = true, () -> moveRight = false));
 
         // Botón de acción (Saltar)
-        ImageButton jumpButton = createButton("ARROWUP.png", 50, 50);
+        ImageButton jumpButton = createButton("ARROWUP.png", 40, 40);
         jumpButton.addListener(new MovementListener(() -> jumpPressed = true, () -> jumpPressed = false));
 
-        table.add(leftButton).size(50, 50).pad(10);
-        table.add().expandX(); // Empty cell to push the right button to the right
-        table.add(rightButton).size(50, 50).pad(10).row();
-        table.add().colspan(2); // Empty cell to align the jump button above the right button
-        table.add(jumpButton).size(50, 50).pad(10).padBottom(60);
+        table.add(leftButton).size(40, 40).pad(10);
+        table.add().expandX(); // Empty cell to push the jump button to the right
+        table.add(jumpButton).size(40, 40).pad(10).row();
+        table.add().colspan(2); // Empty cell to align the right button below the jump button
+        table.add(rightButton).size(40, 40).pad(10).padBottom(60);
 
         stage.addActor(table);
     }
@@ -110,5 +111,11 @@ public class OnScreenControls {
 
     public void resize(int width, int height) {
         viewport.update(width, height);
+    }
+
+    public void handleKeyboardInput() {
+        moveLeft = Gdx.input.isKeyPressed(Input.Keys.LEFT);
+        moveRight = Gdx.input.isKeyPressed(Input.Keys.RIGHT);
+        jumpPressed = Gdx.input.isKeyPressed(Input.Keys.UP);
     }
 }
