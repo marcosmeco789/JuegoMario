@@ -7,6 +7,8 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
+import com.badlogic.gdx.physics.box2d.Filter;
+import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.utils.Array;
@@ -21,42 +23,74 @@ public class Goomba extends Enemigo {
     private Array<TextureRegion> frames;
     private boolean setToDestroy;
     private boolean destroyed;
+    private Animation<TextureRegion> idleAnimation;
+    private Animation<TextureRegion> hurtAnimation;
 
     public Goomba(PantallaJugar screen, float x, float y) {
         super(screen, x, y);
-        frames = new Array<TextureRegion>();
-        for (int i = 0; i < 2; i++)
-            frames.add(new TextureRegion(screen.getAtlas().findRegion("goomba"), i * 16, 0, 16, 16));
-        walkAnimation = new Animation(0.4f, frames);
+        frames = new Array<>();
+
+        // Idle animation
+        for (int i = 0; i < 8; i++) {
+            frames.add(new TextureRegion(screen.getAtlas().findRegion("Enemies"), 15, 143 + i * 16, 16, 16));
+        }
+        idleAnimation = new Animation<>(0.1f, frames);
+        frames.clear();
+
+        // Walk animation
+        for (int i = 0; i < 6; i++) {
+            frames.add(new TextureRegion(screen.getAtlas().findRegion("Enemies"), i * 16, 32, 16, 16));
+        }
+        walkAnimation = new Animation<>(0.1f, frames);
+        frames.clear();
+
+        // Hurt animation
+        for (int i = 0; i < 7; i++) {
+            frames.add(new TextureRegion(screen.getAtlas().findRegion("Enemies"), i * 16, 48, 16, 16));
+        }
+        hurtAnimation = new Animation<>(0.08f, frames);
+        frames.clear();
+
         stateTime = 0;
         setBounds(getX(), getY(), 16 / Main.PPM, 16 / Main.PPM);
         setToDestroy = false;
         destroyed = false;
     }
 
-
     public void update(float dt) {
         stateTime += dt;
         if (setToDestroy && !destroyed) {
-            world.destroyBody(b2body);
-            destroyed = true;
-            setRegion(new TextureRegion(screen.getAtlas().findRegion("goomba"), 32, 0, 16, 16));
-            stateTime = 0;
-
+            setRegion(hurtAnimation.getKeyFrame(stateTime, false));
+            if (hurtAnimation.isAnimationFinished(stateTime)) {
+                world.destroyBody(b2body);
+                destroyed = true;
+                stateTime = 0;
+            }
         } else if (!destroyed) {
             b2body.setLinearVelocity(velocity);
             setPosition(b2body.getPosition().x - getWidth() / 2, b2body.getPosition().y - getHeight() / 2);
-            setRegion((TextureRegion) walkAnimation.getKeyFrame(stateTime, true));
-
-
-        }
+            setRegion(getFrame(dt));
         }
 
+
+    }
+
+    private TextureRegion getFrame(float dt) {
+        TextureRegion region;
+        if (setToDestroy && !destroyed) {
+            region = hurtAnimation.getKeyFrame(stateTime, false);
+        } else if (b2body.getLinearVelocity().x != 0) {
+            region = (TextureRegion) walkAnimation.getKeyFrame(stateTime, true);
+        } else {
+            region = idleAnimation.getKeyFrame(stateTime, true);
+        }
+        return region;
+    }
 
     @Override
     protected void defineEnemigo() {
         BodyDef bdef = new BodyDef();
-        bdef.position.set(getX(),getY());
+        bdef.position.set(getX(), getY());
         bdef.type = BodyDef.BodyType.DynamicBody;
         b2body = world.createBody(bdef);
 
@@ -69,8 +103,7 @@ public class Goomba extends Enemigo {
         fdef.shape = shape;
         b2body.createFixture(fdef).setUserData(this);
 
-        // cabeza goomba
-
+        // Goomba head
         PolygonShape head = new PolygonShape();
         Vector2[] vertice = new Vector2[4];
         vertice[0] = new Vector2(-5, 8).scl(1 / Main.PPM);
@@ -83,10 +116,9 @@ public class Goomba extends Enemigo {
         fdef.restitution = 0.5f;
         fdef.filter.categoryBits = Main.ENEMY_HEAD_BIT;
         b2body.createFixture(fdef).setUserData(this);
-
     }
 
-    public void draw (Batch batch){
+    public void draw(Batch batch) {
         if (!destroyed || stateTime < 1)
             super.draw(batch);
     }
@@ -102,8 +134,17 @@ public class Goomba extends Enemigo {
     @Override
     public void hitOnHead(Mario mario) {
         setToDestroy = true;
+        stateTime = 0; // Reset the state time to start the hurt animation from the beginning
         Main.manager.get("audio/sounds/stomp.wav", Sound.class).play();
+
+        // Remove collision fixture
+        Filter filter = new Filter();
+        filter.maskBits = Main.NOTHING_BIT;
+        for (Fixture fixture : b2body.getFixtureList()) {
+            fixture.setFilterData(filter);
+        }
+
+        // Apply a small jump to Mario
+        mario.b2body.applyLinearImpulse(new Vector2(0, 4.8f), mario.b2body.getWorldCenter(), true);
     }
-
-
 }

@@ -24,8 +24,6 @@ public class Mario extends Sprite {
     public boolean isJumping;
 
     public enum State {FALLING, JUMPING, STANDING, RUNNING, GROWING, DEAD}
-
-    ;
     public State currentState;
     public State previousState;
 
@@ -34,6 +32,8 @@ public class Mario extends Sprite {
 
     private TextureRegion marioStand;
     private Animation marioRun;
+    private Animation marioIdle;
+    private Animation marioJumpAnim;
     private TextureRegion marioJump;
     private TextureRegion marioDead;
     private TextureRegion bigMarioStand;
@@ -51,7 +51,8 @@ public class Mario extends Sprite {
 
 
     public Mario(PantallaJugar screen) {
-        super(screen.getAtlas().findRegion("little_mario"));
+        super(screen.getAtlas().findRegion("idle")); // Imagen inicial
+
         this.world = screen.getWorld();
         currentState = State.STANDING;
         previousState = State.STANDING;
@@ -60,45 +61,45 @@ public class Mario extends Sprite {
 
         Array<TextureRegion> frames = new Array<>();
 
-        for (int i = 1; i < 4; i++)
-            frames.add(new TextureRegion(screen.getAtlas().findRegion("little_mario"), i * 16, 0, 16, 16));
-        marioRun = new Animation(0.1f, frames);
+        // Animación de Idle
+        for (int i = 0; i < 12; i++) {
+            frames.add(new TextureRegion(screen.getAtlas().findRegion("idle"), i * 19, 0, 19, 34));
+        }
+        marioIdle = new Animation<>(0.1f, frames);
         frames.clear();
 
-
-        for (int i = 1; i < 4; i++)
-            frames.add(new TextureRegion(screen.getAtlas().findRegion("big_mario"), i * 16, 0, 16, 32));
-        bigMarioRun = new Animation(0.1f, frames);
+        // Animación de Correr
+        for (int i = 0; i < 8; i++) {
+            frames.add(new TextureRegion(screen.getAtlas().findRegion("run"), i * 21, 0, 21, 33));
+        }
+        marioRun = new Animation<>(0.1f, frames);
         frames.clear();
 
-        frames.add(new TextureRegion(screen.getAtlas().findRegion("big_mario"), 240, 0, 16, 32));
-        frames.add(new TextureRegion(screen.getAtlas().findRegion("big_mario"), 0, 0, 16, 32));
-        frames.add(new TextureRegion(screen.getAtlas().findRegion("big_mario"), 240, 0, 16, 32));
-        frames.add(new TextureRegion(screen.getAtlas().findRegion("big_mario"), 0, 0, 16, 32));
-        growMario = new Animation(0.2f, frames);
+        // Animación de Salto
+        for (int i = 0; i < 4; i++) {
+            frames.add(new TextureRegion(screen.getAtlas().findRegion("full jump animation"), i * 20, 0, 20, 36));
+        }
+        marioJumpAnim = new Animation<>(0.1f, frames);
+        frames.clear();
 
-        marioJump = new TextureRegion(screen.getAtlas().findRegion("little_mario"), 80, 0, 16, 16);
-        bigMarioJump = new TextureRegion(screen.getAtlas().findRegion("big_mario"), 80, 0, 16, 32);
-
-        marioStand = new TextureRegion(getTexture(), 1, 11, 16, 16);
-        bigMarioStand = new TextureRegion(screen.getAtlas().findRegion("big_mario"), 0, 0, 16, 32);
-
-
-        marioDead = new TextureRegion(screen.getAtlas().findRegion("little_mario"), 96, 0, 16, 16);
+        // Definir otras texturas necesarias
+        marioStand = new TextureRegion(screen.getAtlas().findRegion("idle"), 0, 0, 21, 33);
+        marioJump = new TextureRegion(screen.getAtlas().findRegion("full jump animation"), 0, 0, 21, 33);
+        marioDead = new TextureRegion(screen.getAtlas().findRegion("idle"), 0, 0, 21, 33); // Si hay una imagen de muerte, cámbiala
 
         defineMario();
-
-
-        setBounds(0, 0, 16 / Main.PPM, 16 / Main.PPM);
+        setBounds(0, 0, 21 / Main.PPM, 33 / Main.PPM);
         setRegion(marioStand);
     }
 
+
     public void update(float dt) {
+        float textureOffsetY = 10 / Main.PPM; // Ajusta este valor según sea necesario
 
         if (marioIsBig) {
-            setPosition(b2body.getPosition().x - getWidth() / 2, b2body.getPosition().y - getHeight() / 2 - 6 / Main.PPM);
+            setPosition(b2body.getPosition().x - getWidth() / 2, b2body.getPosition().y - getHeight() / 2 - 6 / Main.PPM + textureOffsetY);
         } else {
-            setPosition(b2body.getPosition().x - getWidth() / 2, b2body.getPosition().y - getHeight() / 2);
+            setPosition(b2body.getPosition().x - getWidth() / 2, b2body.getPosition().y - getHeight() / 2 + textureOffsetY);
         }
 
         setRegion(getFrame(dt));
@@ -131,7 +132,7 @@ public class Mario extends Sprite {
                 }
                 break;
             case JUMPING:
-                region = marioIsBig ? bigMarioJump : marioJump;
+                region = (TextureRegion) marioJumpAnim.getKeyFrame(stateTimer, false);
                 break;
             case RUNNING:
                 region = marioIsBig ? (TextureRegion) bigMarioRun.getKeyFrame(stateTimer, true) : (TextureRegion) marioRun.getKeyFrame(stateTimer, true);
@@ -139,7 +140,7 @@ public class Mario extends Sprite {
             case FALLING:
             case STANDING:
             default:
-                region = marioIsBig ? bigMarioStand : marioStand;
+                region = (TextureRegion) marioIdle.getKeyFrame(stateTimer, true);
                 break;
         }
 

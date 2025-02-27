@@ -12,12 +12,15 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.marcos.mario.Main;
 import com.marcos.mario.Scenes.Hud;
-import com.marcos.mario.Scenes.OnScreenControls;
+import com.marcos.mario.Scenes.JumpButton;
+import com.marcos.mario.Scenes.VirtualJoystick;
 import com.marcos.mario.Sprites.Enemies.Enemigo;
 import com.marcos.mario.Sprites.Items.Item;
 import com.marcos.mario.Sprites.Items.ItemDef;
@@ -56,20 +59,22 @@ public class PantallaJugar implements Screen {
     private B2WorldCreator creator;
 
     // botones
-
-    private OnScreenControls onScreenControls;
+    private VirtualJoystick joystick;
+    private Stage stage;
+    private JumpButton jumpButton;
 
     public PantallaJugar(Main game) {
-        atlas = new TextureAtlas("Mario_and_Enemies.pack");
+        atlas = new TextureAtlas("Juego_Sprites.pack");
 
         this.game = game;
         gamecam = new OrthographicCamera();
         // Ajusta el tamaño del FitViewport para abarcar los 19 patrones de alto
-        gamePort = new FitViewport(600/ Main.PPM, 300 / Main.PPM, gamecam);
+        gamePort = new FitViewport(600 / Main.PPM, 300 / Main.PPM, gamecam);
+
         hud = new Hud(game.batch);
 
-        // Inicializa los controles en pantalla
-        onScreenControls = new OnScreenControls(game.batch);
+
+
 
         mapLoader = new TmxMapLoader();
         map = mapLoader.load("level1.tmx");
@@ -114,20 +119,50 @@ public class PantallaJugar implements Screen {
 
     @Override
     public void show() {
+        stage = new Stage(new ScreenViewport());
+        // Configura el InputProcessor para que el Stage reciba los eventos táctiles
+        Gdx.input.setInputProcessor(stage);
 
+        // Instancia y posiciona el joystick (por ejemplo, en la esquina inferior izquierda)
+        joystick = new VirtualJoystick();
+        joystick.setPosition(20, 20);
+        stage.addActor(joystick);
+
+        // Instancia y posiciona el botón de salto en la esquina inferior derecha
+        jumpButton = new JumpButton();
+        // Posición ajustable: se ubica a 20 píxeles del borde derecho e inferior
+        jumpButton.setPosition(stage.getViewport().getWorldWidth() - jumpButton.getWidth() - 20, 20);
+        stage.addActor(jumpButton);
     }
 
     public void handleInput(float dt) {
         if (player.currentState != Mario.State.DEAD) {
-            if (onScreenControls.isJumpPressed() && player.b2body.getLinearVelocity().y == 0 && !player.isJumping) {
-                player.b2body.applyLinearImpulse(new Vector2(0, 3.95f), player.b2body.getWorldCenter(), true);
+            // Obtiene la dirección horizontal del joystick (sin considerar el eje Y)
+            Vector2 direction = joystick.getKnobPercentage();
+            float maxSpeed = 2.0f; // Velocidad máxima permitida
+
+            if (Math.abs(direction.x) > 0.01f) { // Se usa un umbral para evitar pequeños ruidos
+                player.b2body.applyLinearImpulse(new Vector2(direction.x * 0.04f, 0), // Impulso reducido
+                    player.b2body.getWorldCenter(), true);
+            } else {
+                // Aplica una fuerza de frenado cuando no se detecta movimiento del joystick
+                Vector2 velocity = player.b2body.getLinearVelocity();
+                player.b2body.setLinearVelocity(velocity.x * 0.95f, velocity.y);
+            }
+
+            // Limita la velocidad máxima
+            Vector2 currentVelocity = player.b2body.getLinearVelocity();
+            if (currentVelocity.x > maxSpeed) {
+                player.b2body.setLinearVelocity(maxSpeed, currentVelocity.y);
+            } else if (currentVelocity.x < -maxSpeed) {
+                player.b2body.setLinearVelocity(-maxSpeed, currentVelocity.y);
+            }
+
+            // Lógica de salto usando el botón de salto
+            if (jumpButton.isPressed() && player.b2body.getLinearVelocity().y == 0 && !player.isJumping) {
+                player.b2body.applyLinearImpulse(new Vector2(0, 3.7f), // Impulso reducido
+                    player.b2body.getWorldCenter(), true);
                 player.isJumping = true;
-            }
-            if (onScreenControls.isMoveRight() && player.b2body.getLinearVelocity().x <= 2) {
-                player.b2body.applyLinearImpulse(new Vector2(0.1f, 0), player.b2body.getWorldCenter(), true);
-            }
-            if (onScreenControls.isMoveLeft() && player.b2body.getLinearVelocity().x >= -2) {
-                player.b2body.applyLinearImpulse(new Vector2(-0.1f, 0), player.b2body.getWorldCenter(), true);
             }
             if (player.b2body.getLinearVelocity().y == 0) {
                 player.isJumping = false;
@@ -135,9 +170,16 @@ public class PantallaJugar implements Screen {
         }
     }
 
+
+
     @Override
     public void render(float delta) {
         update(delta);
+
+        stage.act(delta);
+        stage.draw();
+        handleInput(delta);
+
         Gdx.gl.glClear(Gdx.gl.GL_COLOR_BUFFER_BIT);
 
         renderer.render();
@@ -158,9 +200,10 @@ public class PantallaJugar implements Screen {
         game.batch.setProjectionMatrix(hud.stage.getCamera().combined);
         hud.stage.draw();
 
-        // Render OnScreenControls last to ensure they are on top
-        game.batch.setProjectionMatrix(gamecam.combined);
-        onScreenControls.render(game.batch);
+        // Render Virtual Joystick
+        stage.act(delta);
+        stage.draw();
+        Vector2 direction = joystick.getKnobPercentage();
 
         if (gameOver()) {
             game.setScreen(new PantallaGameOver(game));
@@ -238,5 +281,8 @@ public class PantallaJugar implements Screen {
         world.dispose();
         b2dr.dispose();
         hud.dispose();
+        stage.dispose();
+        joystick.dispose(); // Libera las texturas del joystick
+        jumpButton.dispose();
     }
 }
