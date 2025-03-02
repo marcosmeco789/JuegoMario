@@ -135,22 +135,19 @@ public class PantallaJugar implements Screen {
         stage.addActor(jumpButton);
     }
 
+    // PantallaJugar.java
     public void handleInput(float dt) {
         if (player.currentState != Mario.State.DEAD) {
-            // Obtiene la dirección horizontal del joystick (sin considerar el eje Y)
             Vector2 direction = joystick.getKnobPercentage();
-            float maxSpeed = 2.0f; // Velocidad máxima permitida
+            float maxSpeed = 2.0f;
 
-            if (Math.abs(direction.x) > 0.01f) { // Se usa un umbral para evitar pequeños ruidos
-                player.b2body.applyLinearImpulse(new Vector2(direction.x * 0.04f, 0), // Impulso reducido
-                    player.b2body.getWorldCenter(), true);
+            if (Math.abs(direction.x) > 0.01f) {
+                player.b2body.applyLinearImpulse(new Vector2(direction.x * 0.04f, 0), player.b2body.getWorldCenter(), true);
             } else {
-                // Aplica una fuerza de frenado cuando no se detecta movimiento del joystick
                 Vector2 velocity = player.b2body.getLinearVelocity();
                 player.b2body.setLinearVelocity(velocity.x * 0.95f, velocity.y);
             }
 
-            // Limita la velocidad máxima
             Vector2 currentVelocity = player.b2body.getLinearVelocity();
             if (currentVelocity.x > maxSpeed) {
                 player.b2body.setLinearVelocity(maxSpeed, currentVelocity.y);
@@ -158,19 +155,33 @@ public class PantallaJugar implements Screen {
                 player.b2body.setLinearVelocity(-maxSpeed, currentVelocity.y);
             }
 
-            // Lógica de salto usando el botón de salto
             if (jumpButton.isPressed() && player.b2body.getLinearVelocity().y == 0 && !player.isJumping) {
-                player.b2body.applyLinearImpulse(new Vector2(0, 3.7f), // Impulso reducido
-                    player.b2body.getWorldCenter(), true);
+                player.b2body.applyLinearImpulse(new Vector2(0, 3.7f), player.b2body.getWorldCenter(), true);
                 player.isJumping = true;
             }
             if (player.b2body.getLinearVelocity().y == 0) {
                 player.isJumping = false;
             }
+
+            if (player.isNearLadder() && direction.y > 0.01f) {
+                player.setOnLadder(true);
+            }
+
+            if (player.isOnLadder()) {
+                float xVel = player.b2body.getLinearVelocity().x;
+                if (direction.y > 0.90f) {
+                    player.b2body.setLinearVelocity(new Vector2(xVel, direction.y * maxSpeed));
+                } else {
+                    player.setOnLadder(false);
+                }
+            }
         }
     }
 
 
+    public VirtualJoystick getJoystick() {
+        return joystick;
+    }
 
     @Override
     public void render(float delta) {

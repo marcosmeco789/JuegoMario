@@ -48,10 +48,13 @@ public class Mario extends Sprite {
     private boolean timeToDefineBigMario;
     private boolean timeToRedefineMario;
     private boolean marioIsDead;
-
+    private boolean onLadder;
+    private boolean nearLadder;
+    private PantallaJugar screen;
 
     public Mario(PantallaJugar screen) {
         super(screen.getAtlas().findRegion("idle")); // Imagen inicial
+        this.screen = screen;
 
         this.world = screen.getWorld();
         currentState = State.STANDING;
@@ -93,6 +96,23 @@ public class Mario extends Sprite {
     }
 
 
+    public void setOnLadder(boolean onLadder) {
+        this.onLadder = onLadder;
+    }
+
+    public boolean isOnLadder() {
+        return onLadder;
+    }
+
+    public void setNearLadder(boolean nearLadder) {
+        this.nearLadder = nearLadder;
+    }
+
+    public boolean isNearLadder() {
+        return nearLadder;
+    }
+
+
     public void update(float dt) {
         float textureOffsetY = 10 / Main.PPM; // Ajusta este valor según sea necesario
 
@@ -109,6 +129,11 @@ public class Mario extends Sprite {
         }
         if (timeToRedefineMario) {
             redefineMario();
+        }
+
+
+        if (onLadder) {
+            b2body.setLinearVelocity(new Vector2(0, 1)); // Adjust the speed as needed
         }
     }
 
@@ -191,6 +216,22 @@ public class Mario extends Sprite {
     }
 
     public void hit(Enemigo enemigo) {
+        // If the method is called with a null enemy (e.g., "Muerte" collision), kill Mario
+        if (enemigo == null) {
+            if (!marioIsDead) {
+                Main.manager.get("audio/sounds/mariodie.wav", Sound.class).play();
+                marioIsDead = true;
+                Filter filter = new Filter();
+                filter.maskBits = Main.NOTHING_BIT;
+                for (Fixture fixture : b2body.getFixtureList()) {
+                    fixture.setFilterData(filter);
+                }
+                b2body.applyLinearImpulse(new Vector2(0, 4f), b2body.getWorldCenter(), true);
+            }
+            return;
+        }
+
+        // Existing turtle shell or enemy logic
         if (enemigo instanceof Turtle && ((Turtle) enemigo).getCurrentState() == Turtle.State.STANDING_SHELL) {
             ((Turtle) enemigo).kick(this.getX() <= enemigo.getX() ? Turtle.KICK_RIGHT_SPEED : Turtle.KICK_LEFT_SPEED);
         } else {
@@ -204,11 +245,13 @@ public class Mario extends Sprite {
                 marioIsDead = true;
                 Filter filter = new Filter();
                 filter.maskBits = Main.NOTHING_BIT;
-                for (Fixture fixture : b2body.getFixtureList())
+                for (Fixture fixture : b2body.getFixtureList()) {
                     fixture.setFilterData(filter);
+                }
                 b2body.applyLinearImpulse(new Vector2(0, 4f), b2body.getWorldCenter(), true);
             }
         }
+
     }
 
 
@@ -231,7 +274,8 @@ public class Mario extends Sprite {
             Main.ENEMY_BIT |
             Main.OBJECT_BIT |
             Main.ENEMY_HEAD_BIT |
-            Main.ITEM_BIT;
+            Main.ITEM_BIT |
+            Main.ESCALERA_BIT;
 
         fdef.shape = shape;
         b2body.createFixture(fdef).setUserData(this);
@@ -285,6 +329,12 @@ public class Mario extends Sprite {
 
     }
 
+    public boolean isPressingDown() {
+        Vector2 direction = screen.getJoystick().getKnobPercentage();
+        return direction.y < -0.5f; // Adjust the threshold as needed
+    }
+
+
     public void defineMario() {
         BodyDef bdef = new BodyDef();
         bdef.position.set(172 / Main.PPM, 172 / Main.PPM);
@@ -301,7 +351,10 @@ public class Mario extends Sprite {
             Main.ENEMY_BIT |
             Main.OBJECT_BIT |
             Main.ENEMY_HEAD_BIT |
-            Main.ITEM_BIT;
+            Main.ITEM_BIT |
+            Main.ESCALERA_BIT |
+            Main.TECHO_ESCALERA_BIT |
+            Main.MUERTE_BIT;
 
         fdef.shape = shape;
         b2body.createFixture(fdef).setUserData(this);

@@ -1,5 +1,7 @@
 package com.marcos.mario.Tools;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
@@ -7,6 +9,7 @@ import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.marcos.mario.Main;
 import com.marcos.mario.Sprites.Enemies.Enemigo;
+import com.marcos.mario.Sprites.Enemies.Goomba;
 import com.marcos.mario.Sprites.Items.Item;
 import com.marcos.mario.Sprites.Mario;
 import com.marcos.mario.Sprites.TileObjects.InteractiveTileObject;
@@ -16,6 +19,37 @@ public class WorldContactListener implements ContactListener {
     public void beginContact(Contact contact) {
         Fixture fixA = contact.getFixtureA();
         Fixture fixB = contact.getFixtureB();
+
+
+        if ("escalera".equals(fixA.getUserData()) || "escalera".equals(fixB.getUserData())) {
+            Fixture escaleraFixture = "escalera".equals(fixA.getUserData()) ? fixA : fixB;
+            Fixture otherFixture = (escaleraFixture == fixA) ? fixB : fixA;
+
+            if (otherFixture.getUserData() instanceof Mario) {
+
+                ((Mario) otherFixture.getUserData()).setNearLadder(true);
+            }
+        }
+
+        if ("techoEscalera".equals(fixA.getUserData()) || "techoEscalera".equals(fixB.getUserData())) {
+            Fixture techoEscaleraFixture = "techoEscalera".equals(fixA.getUserData()) ? fixA : fixB;
+            Fixture otherFixture = techoEscaleraFixture == fixA ? fixB : fixA;
+
+            if (otherFixture.getUserData() instanceof Mario) {
+                Gdx.app.log("Ceiling Ladder", "Mario hit the ceiling of the ladder");
+                ((Mario) otherFixture.getUserData()).setOnLadder(false);
+            }
+        }
+
+        if ("muerte".equals(fixA.getUserData()) || "muerte".equals(fixB.getUserData())) {
+            Fixture muerteFixture = "muerte".equals(fixA.getUserData()) ? fixA : fixB;
+            Fixture otherFixture = (muerteFixture == fixA) ? fixB : fixA;
+
+            if (otherFixture.getUserData() instanceof Mario) {
+                ((Mario) otherFixture.getUserData()).hit(null); // Llama al método hit de Mario
+            }
+        }
+
 
         int cDef = fixA.getFilterData().categoryBits | fixB.getFilterData().categoryBits;
 
@@ -74,12 +108,42 @@ public class WorldContactListener implements ContactListener {
 
     @Override
     public void endContact(Contact contact) {
+        Fixture fixA = contact.getFixtureA();
+        Fixture fixB = contact.getFixtureB();
 
+        if ("escalera".equals(fixA.getUserData()) || "escalera".equals(fixB.getUserData())) {
+            Fixture escaleraFixture = "escalera".equals(fixA.getUserData()) ? fixA : fixB;
+            Fixture otherFixture = escaleraFixture == fixA ? fixB : fixA;
+
+            if (otherFixture.getUserData() instanceof Mario) {
+                ((Mario) otherFixture.getUserData()).setNearLadder(false);
+                ((Mario) otherFixture.getUserData()).setOnLadder(false);
+            }
+        }
     }
 
     @Override
     public void preSolve(Contact contact, Manifold oldManifold) {
+        Fixture fixA = contact.getFixtureA();
+        Fixture fixB = contact.getFixtureB();
 
+        if ("techoEscalera".equals(fixA.getUserData()) || "techoEscalera".equals(fixB.getUserData())) {
+            Fixture escaleraFixture = "techoEscalera".equals(fixA.getUserData()) ? fixA : fixB;
+            Fixture otherFixture = (escaleraFixture == fixA) ? fixB : fixA;
+            if (otherFixture.getUserData() instanceof Mario) {
+                Mario mario = (Mario) otherFixture.getUserData();
+                boolean marioBelow = mario.b2body.getPosition().y < escaleraFixture.getBody().getPosition().y;
+                boolean pressingDown = Gdx.input.isKeyPressed(Input.Keys.DOWN) || mario.isPressingDown(); // Check for joystick down input
+
+                if (marioBelow && !pressingDown) {
+                    contact.setEnabled(false);
+                } else if (!marioBelow && pressingDown) {
+                    contact.setEnabled(false);
+                } else {
+                    contact.setEnabled(true);
+                }
+            }
+        }
     }
 
     @Override

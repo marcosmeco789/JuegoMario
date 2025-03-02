@@ -24,6 +24,9 @@ public class Main extends Game {
     public static final short ENEMY_HEAD_BIT = 128;
     public static final short ITEM_BIT = 256;
     public static final short MARIO_HEAD_BIT = 512;
+    public static final short ESCALERA_BIT = 1024;
+    public static final short TECHO_ESCALERA_BIT = 2048;
+    public static final short MUERTE_BIT = 4096;
 
 
     public SpriteBatch batch; // Usado para dibujar en todas las pantallas

@@ -71,8 +71,6 @@ public class Goomba extends Enemigo {
             setPosition(b2body.getPosition().x - getWidth() / 2, b2body.getPosition().y - getHeight() / 2);
             setRegion(getFrame(dt));
         }
-
-
     }
 
     private TextureRegion getFrame(float dt) {
@@ -84,6 +82,12 @@ public class Goomba extends Enemigo {
         } else {
             region = idleAnimation.getKeyFrame(stateTime, true);
         }
+
+        // Flip the texture based on the direction of the velocity
+        if ((velocity.x < 0 && !region.isFlipX()) || (velocity.x > 0 && region.isFlipX())) {
+            region.flip(true, false);
+        }
+
         return region;
     }
 
@@ -128,6 +132,17 @@ public class Goomba extends Enemigo {
             setToDestroy = true;
         } else {
             reverseVelocity(true, false);
+        }
+    }
+
+    @Override
+    public void reverseVelocity(boolean x, boolean y) {
+        if (x) {
+            velocity.x = -velocity.x;
+            setFlip(!isFlipX(), false); // Flip the texture horizontally
+        }
+        if (y) {
+            velocity.y = -velocity.y;
         }
     }
 

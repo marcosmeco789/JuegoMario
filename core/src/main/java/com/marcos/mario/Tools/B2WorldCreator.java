@@ -33,7 +33,43 @@ public class B2WorldCreator {
         Body body;
 
 
+        for (MapObject object : map.getLayers().get("Muerte").getObjects().getByType(RectangleMapObject.class)) {
+            Rectangle rect = ((RectangleMapObject) object).getRectangle();
 
+            bdef.type = BodyDef.BodyType.StaticBody;
+            bdef.position.set((rect.getX() + rect.getWidth() / 2) / Main.PPM, (rect.getY() + rect.getHeight() / 2) / Main.PPM);
+
+            body = world.createBody(bdef);
+
+            shape.setAsBox(rect.getWidth() / 2 / Main.PPM, rect.getHeight() / 2 / Main.PPM);
+            fdef.shape = shape;
+            fdef.isSensor = true;
+            fdef.filter.categoryBits = Main.MUERTE_BIT;
+            body.createFixture(fdef).setUserData("muerte");
+        }
+
+        // Creation of ladder and ceiling ladder fixtures
+        for (MapObject object : map.getLayers().get("Escalera").getObjects().getByType(RectangleMapObject.class)) {
+            Rectangle rect = ((RectangleMapObject) object).getRectangle();
+            String tipo = object.getProperties().get("tipo", String.class);
+
+            bdef.type = BodyDef.BodyType.StaticBody;
+            bdef.position.set((rect.getX() + rect.getWidth() / 2) / Main.PPM, (rect.getY() + rect.getHeight() / 2) / Main.PPM);
+            body = world.createBody(bdef);
+
+            shape.setAsBox(rect.getWidth() / 2 / Main.PPM, rect.getHeight() / 2 / Main.PPM);
+            fdef.shape = shape;
+
+            if ("escalera".equals(tipo)) {
+                fdef.isSensor = true; // Make the ladder a sensor
+                fdef.filter.categoryBits = Main.ESCALERA_BIT;
+                body.createFixture(fdef).setUserData("escalera");
+            } else if ("techoEscalera".equals(tipo)) {
+                fdef.isSensor = false; // The ceiling of the ladder is not a sensor
+                fdef.filter.categoryBits = Main.TECHO_ESCALERA_BIT;
+                body.createFixture(fdef).setUserData("techoEscalera");
+            }
+        }
 
         // creacion suelo fixture
         for (MapObject object : map.getLayers().get(4).getObjects().getByType(RectangleMapObject.class)) {
@@ -68,7 +104,7 @@ public class B2WorldCreator {
 
 
         // creacion ladrillos fixture
-        for (MapObject object : map.getLayers().get(5).getObjects().getByType(RectangleMapObject.class)) {
+        for (MapObject object : map.getLayers().get("Bricks").getObjects().getByType(RectangleMapObject.class)) {
 
 
             new Ladrillo(screen, object);
@@ -90,10 +126,32 @@ public class B2WorldCreator {
 
         // creacion tortugas
         turtles = new Array<Turtle>();
-        for (MapObject object : map.getLayers().get(7).getObjects().getByType(RectangleMapObject.class)) {
+        for (MapObject object : map.getLayers().get("Turtles").getObjects().getByType(RectangleMapObject.class)) {
             Rectangle rect = ((RectangleMapObject) object).getRectangle();
             turtles.add(new Turtle(screen, rect.getX() / Main.PPM, rect.getY() / Main.PPM));
         }
+
+
+        // creacion GoombaBounds
+        for (MapObject object : map.getLayers().get("GoombaBounds").getObjects().getByType(RectangleMapObject.class)) {
+            Rectangle rect = ((RectangleMapObject) object).getRectangle();
+            bdef.type = BodyDef.BodyType.StaticBody;
+            bdef.position.set((rect.getX() + rect.getWidth() / 2) / Main.PPM, (rect.getY() + rect.getHeight() / 2) / Main.PPM);
+            body = world.createBody(bdef);
+
+            shape = new PolygonShape();
+            shape.setAsBox(rect.getWidth() / 2 / Main.PPM, rect.getHeight() / 2 / Main.PPM);
+
+
+            fdef = new FixtureDef();
+            fdef.shape = shape;
+            fdef.isSensor = true; // Make it a sensor so Mario can pass through
+            fdef.filter.categoryBits = Main.OBJECT_BIT; // Set the category bit
+            fdef.filter.maskBits = Main.ENEMY_BIT; // Only collide with enemies
+
+            body.createFixture(fdef).setUserData("goomba_bound");
+        }
+
 
 
     }
