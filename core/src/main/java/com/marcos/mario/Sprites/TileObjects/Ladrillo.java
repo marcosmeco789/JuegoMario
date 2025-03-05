@@ -13,18 +13,18 @@ public class Ladrillo extends InteractiveTileObject {
     public Ladrillo(PantallaJugar screen, MapObject object) {
         super(screen, object);
         fixture.setUserData(this);
-        setCategoryFilter(com.marcos.mario.Main.BRICK_BIT);
+        setCategoryFilter(Main.BRICK_BIT);
     }
 
     @Override
     public void onHeadHit(Mario mario) {
-        if (mario.isBig()) {
 
             setCategoryFilter(Main.DESTROYED_BIT);
             getCell().setTile(null);
             Hud.addScore(200);
             Main.manager.get("audio/sounds/breakblock.wav", Sound.class).play();
-        }
-        Main.manager.get("audio/sounds/bump.wav", Sound.class).play();
+
+
     }
+
 }

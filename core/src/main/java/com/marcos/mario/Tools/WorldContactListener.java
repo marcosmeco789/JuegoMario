@@ -10,6 +10,7 @@ import com.badlogic.gdx.physics.box2d.Manifold;
 import com.marcos.mario.Main;
 import com.marcos.mario.Sprites.Enemies.Enemigo;
 import com.marcos.mario.Sprites.Enemies.Goomba;
+import com.marcos.mario.Sprites.Enemies.Pinchos;
 import com.marcos.mario.Sprites.Items.Item;
 import com.marcos.mario.Sprites.Mario;
 import com.marcos.mario.Sprites.TileObjects.InteractiveTileObject;
@@ -19,6 +20,26 @@ public class WorldContactListener implements ContactListener {
     public void beginContact(Contact contact) {
         Fixture fixA = contact.getFixtureA();
         Fixture fixB = contact.getFixtureB();
+
+
+        if (fixA.getUserData() instanceof Pinchos || fixB.getUserData() instanceof Pinchos) {
+            Fixture pinchosFixture = fixA.getUserData() instanceof Pinchos ? fixA : fixB;
+            Fixture otherFixture = pinchosFixture == fixA ? fixB : fixA;
+
+            if (otherFixture.getUserData() instanceof Mario) {
+                ((Mario) otherFixture.getUserData()).hit(null); // Call the hit method on Mario
+            }
+        }
+
+
+        if ("final".equals(fixA.getUserData()) || "final".equals(fixB.getUserData())) {
+            Fixture finalFixture = "final".equals(fixA.getUserData()) ? fixA : fixB;
+            Fixture otherFixture = finalFixture == fixA ? fixB : fixA;
+
+            if (otherFixture.getUserData() instanceof Mario) {
+                ((Mario) otherFixture.getUserData()).setHasReachedFinal(true);
+            }
+        }
 
 
         if ("escalera".equals(fixA.getUserData()) || "escalera".equals(fixB.getUserData())) {

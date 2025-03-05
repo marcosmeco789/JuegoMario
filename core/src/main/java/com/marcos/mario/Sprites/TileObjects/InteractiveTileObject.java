@@ -14,18 +14,19 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.marcos.mario.Main;
+import com.marcos.mario.Screens.PantallaGameOver;
 import com.marcos.mario.Screens.PantallaJugar;
 import com.marcos.mario.Sprites.Mario;
 
 public abstract class InteractiveTileObject {
     protected World world;
     protected TiledMap map;
-    protected TiledMapTile tile;
     protected Rectangle bounds;
     protected Body body;
-    protected Fixture fixture;
     protected PantallaJugar screen;
     protected MapObject object;
+
+    protected Fixture fixture;
 
     public InteractiveTileObject(PantallaJugar screen, MapObject object) {
         this.object = object;
@@ -46,6 +47,7 @@ public abstract class InteractiveTileObject {
         shape.setAsBox(bounds.getWidth() / 2 / Main.PPM, bounds.getHeight() / 2 / Main.PPM);
         fdef.shape = shape;
         fixture = body.createFixture(fdef);
+
     }
 
     public abstract void onHeadHit(Mario mario);
@@ -57,7 +59,8 @@ public abstract class InteractiveTileObject {
     }
 
     public TiledMapTileLayer.Cell getCell() {
-        TiledMapTileLayer layer = (TiledMapTileLayer) map.getLayers().get(1);
-        return layer.getCell((int) (body.getPosition().x * Main.PPM / 16), (int) (body.getPosition().y * Main.PPM / 16));
+        TiledMapTileLayer layer = (TiledMapTileLayer) map.getLayers().get(2);
+        return layer.getCell((int) (body.getPosition().x * Main.PPM / 16),
+            (int) (body.getPosition().y * Main.PPM / 16));
     }
 }

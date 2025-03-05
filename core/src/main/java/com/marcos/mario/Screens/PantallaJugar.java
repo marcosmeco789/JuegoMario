@@ -21,6 +21,7 @@ import com.marcos.mario.Main;
 import com.marcos.mario.Scenes.Hud;
 import com.marcos.mario.Scenes.JumpButton;
 import com.marcos.mario.Scenes.VirtualJoystick;
+import com.marcos.mario.Sprites.Enemies.Abeja;
 import com.marcos.mario.Sprites.Enemies.Enemigo;
 import com.marcos.mario.Sprites.Items.Item;
 import com.marcos.mario.Sprites.Items.ItemDef;
@@ -38,7 +39,7 @@ public class PantallaJugar implements Screen {
     private Main game;
     private TextureAtlas atlas;
     private Mario player;
-
+    private boolean hasReachedFinal = false;
     private Music music;
 
     private Array<Item> items;
@@ -63,21 +64,32 @@ public class PantallaJugar implements Screen {
     private Stage stage;
     private JumpButton jumpButton;
 
-    public PantallaJugar(Main game) {
+    private int mapNumber = 1;
+
+    public PantallaJugar(Main game, int mapNumber) {
         atlas = new TextureAtlas("Juego_Sprites.pack");
 
         this.game = game;
         gamecam = new OrthographicCamera();
+
         // Ajusta el tamaño del FitViewport para abarcar los 19 patrones de alto
         gamePort = new FitViewport(600 / Main.PPM, 300 / Main.PPM, gamecam);
 
         hud = new Hud(game.batch);
+        String mapFile = "";
+        if (mapNumber == 1) {
+            mapFile = "level0.tmx";
+        } else if (mapNumber == 2) {
+            mapFile = "level1.tmx";
+        } else if (mapNumber == 3) {
+            mapFile = "level2.tmx";
+        }
 
 
 
 
         mapLoader = new TmxMapLoader();
-        map = mapLoader.load("level1.tmx");
+        map = mapLoader.load(mapFile);
         renderer = new OrthogonalTiledMapRenderer(map, 1 / Main.PPM);
 
         // Centra la cámara en el jugador
@@ -88,16 +100,24 @@ public class PantallaJugar implements Screen {
 
         creator = new B2WorldCreator(this);
 
-        player = new Mario(this);
+        player = new Mario(this, hud);
+        hud.setPlayer(player);
 
         world.setContactListener(new WorldContactListener());
 
         music = Main.manager.get("audio/music/mario_music.ogg", Music.class);
-        music.setLooping(true);
-        music.play();
+        if (music != null) {
+            music.setLooping(true);
+            if (Gdx.app.getPreferences("MyPreferences").getBoolean("volumeActivated", true)) {
+                music.play();
+            }
+        }
 
         items = new Array<Item>();
         itemsToSpawn = new LinkedBlockingDeque<ItemDef>();
+    }
+    public PantallaJugar(Main game) {
+        this(game, Main.currentMapNumber);
     }
 
     public void spawnItem(ItemDef idef) {
@@ -220,6 +240,20 @@ public class PantallaJugar implements Screen {
             game.setScreen(new PantallaGameOver(game));
             dispose();
         }
+
+
+        if (player.hasReachedFinal()) {
+            int timeTaken = 150 - hud.getWorldTimer();
+            game.setScreen(new PantallaVictoria(game, timeTaken, Main.currentMapNumber));
+            dispose();
+        }
+
+
+
+    }
+
+    public Main getGame() {
+        return game;
     }
 
     public void update(float dt) {
@@ -231,7 +265,9 @@ public class PantallaJugar implements Screen {
         player.update(dt);
         for (Enemigo enemigo : creator.getEnemigos()) {
             enemigo.update(dt);
-            if (enemigo.getX() < player.getX() + 224 / Main.PPM) {
+            if (enemigo instanceof Abeja && enemigo.getX() < player.getX() + 100 / Main.PPM) {
+                enemigo.b2body.setActive(true);
+            } else if (enemigo.getX() < player.getX() + 31000 / Main.PPM) {
                 enemigo.b2body.setActive(true);
             }
         }

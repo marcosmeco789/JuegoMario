@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Meco\'s adventure</string>
+    <string name="jugar">play</string>
+    <string name="opciones">settings</string>
+    <string name="records">records</string>
+    <string name="creditos">credits</string>
+    <string name="salir">exit</string>
+    <string name="tutorial">tutorial</string>
+    <string name="nivel1">level 1</string>
+    <string name="nivel2">level 2</string>
+    <string name="volumen">volume on</string>
+    <string name="reiniciarRecords">reset records</string>
+    <string name="idioma">select language</string>
+    <string name="volver">return</string>
+</resources>

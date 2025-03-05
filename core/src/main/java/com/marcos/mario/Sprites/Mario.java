@@ -1,5 +1,6 @@
 package com.marcos.mario.Sprites;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -13,10 +14,13 @@ import com.badlogic.gdx.physics.box2d.EdgeShape;
 import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.marcos.mario.Main;
+import com.marcos.mario.Scenes.Hud;
 import com.marcos.mario.Screens.PantallaJugar;
+import com.marcos.mario.Screens.PantallaVictoria;
 import com.marcos.mario.Sprites.Enemies.Enemigo;
 import com.marcos.mario.Sprites.Enemies.Turtle;
 
@@ -40,6 +44,7 @@ public class Mario extends Sprite {
     private TextureRegion bigMarioJump;
     private Animation bigMarioRun;
     private Animation growMario;
+    private Main game;
 
     private float stateTimer;
     private boolean runningRight;
@@ -51,11 +56,15 @@ public class Mario extends Sprite {
     private boolean onLadder;
     private boolean nearLadder;
     private PantallaJugar screen;
+    private boolean hasReachedFinal = false;
 
-    public Mario(PantallaJugar screen) {
+    private Hud hud;
+
+    public Mario(PantallaJugar screen, Hud hud) {
         super(screen.getAtlas().findRegion("idle")); // Imagen inicial
         this.screen = screen;
 
+        this.game = screen.getGame();
         this.world = screen.getWorld();
         currentState = State.STANDING;
         previousState = State.STANDING;
@@ -63,6 +72,8 @@ public class Mario extends Sprite {
         runningRight = true;
 
         Array<TextureRegion> frames = new Array<>();
+
+        this.hud = hud;
 
         // Animación de Idle
         for (int i = 0; i < 12; i++) {
@@ -93,8 +104,24 @@ public class Mario extends Sprite {
         defineMario();
         setBounds(0, 0, 21 / Main.PPM, 33 / Main.PPM);
         setRegion(marioStand);
+
+
+
     }
 
+    public void setHasReachedFinal(boolean hasReachedFinal) {
+        this.hasReachedFinal = hasReachedFinal;
+    }
+
+    public boolean reachFinal() {
+        // Implement the logic to check if Mario has reached the final point
+        // For example, check if Mario's position is at the end of the level
+        return hasReachedFinal; // Replace this with the actual condition
+    }
+
+    public boolean hasReachedFinal() {
+        return hasReachedFinal;
+    }
 
     public void setOnLadder(boolean onLadder) {
         this.onLadder = onLadder;
@@ -114,7 +141,7 @@ public class Mario extends Sprite {
 
 
     public void update(float dt) {
-        float textureOffsetY = 10 / Main.PPM; // Ajusta este valor según sea necesario
+        float textureOffsetY = 3 / Main.PPM; // Ajusta este valor según sea necesario
 
         if (marioIsBig) {
             setPosition(b2body.getPosition().x - getWidth() / 2, b2body.getPosition().y - getHeight() / 2 - 6 / Main.PPM + textureOffsetY);
@@ -216,7 +243,7 @@ public class Mario extends Sprite {
     }
 
     public void hit(Enemigo enemigo) {
-        // If the method is called with a null enemy (e.g., "Muerte" collision), kill Mario
+        // Si el método se llama con un enemigo nulo (por ejemplo, colisión con "Muerte"), mata a Mario
         if (enemigo == null) {
             if (!marioIsDead) {
                 Main.manager.get("audio/sounds/mariodie.wav", Sound.class).play();
@@ -227,6 +254,7 @@ public class Mario extends Sprite {
                     fixture.setFilterData(filter);
                 }
                 b2body.applyLinearImpulse(new Vector2(0, 4f), b2body.getWorldCenter(), true);
+                Gdx.input.vibrate(500); // Activa la vibración durante 500 milisegundos
             }
             return;
         }
@@ -253,6 +281,8 @@ public class Mario extends Sprite {
         }
 
     }
+
+
 
 
     public void redefineMario() {
@@ -310,6 +340,7 @@ public class Mario extends Sprite {
             Main.ENEMY_BIT |
             Main.OBJECT_BIT |
             Main.ENEMY_HEAD_BIT |
+            Main.TECHO_ESCALERA_BIT |
             Main.ITEM_BIT;
 
         fdef.shape = shape;
@@ -337,13 +368,15 @@ public class Mario extends Sprite {
 
     public void defineMario() {
         BodyDef bdef = new BodyDef();
-        bdef.position.set(172 / Main.PPM, 172 / Main.PPM);
+        bdef.position.set(405 / Main.PPM, 172 / Main.PPM);
         bdef.type = BodyDef.BodyType.DynamicBody;
         b2body = world.createBody(bdef);
 
         FixtureDef fdef = new FixtureDef();
-        CircleShape shape = new CircleShape();
-        shape.setRadius(6 / Main.PPM);
+        PolygonShape bodyShape = new PolygonShape();
+        bodyShape.setAsBox(4.5f / Main.PPM, 13 / Main.PPM); // Body shape
+
+        fdef.shape = bodyShape;
         fdef.filter.categoryBits = Main.MARIO_BIT;
         fdef.filter.maskBits = Main.GROUND_BIT |
             Main.COIN_BIT |
@@ -354,16 +387,16 @@ public class Mario extends Sprite {
             Main.ITEM_BIT |
             Main.ESCALERA_BIT |
             Main.TECHO_ESCALERA_BIT |
-            Main.MUERTE_BIT;
+            Main.MUERTE_BIT |
+            Main.OBJETO_PINCHOS_BIT;
 
-        fdef.shape = shape;
         b2body.createFixture(fdef).setUserData(this);
 
         EdgeShape head = new EdgeShape();
-        head.set(new Vector2(-1.6f / Main.PPM, 6 / Main.PPM), new Vector2(1.6f / Main.PPM, 6 / Main.PPM));
-        fdef.filter.categoryBits = Main.MARIO_HEAD_BIT;
+        head.set(new Vector2(-1.6f / Main.PPM, 13 / Main.PPM), new Vector2(1.6f / Main.PPM, 12 / Main.PPM)); // Taller head shape
         fdef.shape = head;
         fdef.isSensor = true;
+        fdef.filter.categoryBits = Main.MARIO_HEAD_BIT;
 
         b2body.createFixture(fdef).setUserData(this);
     }

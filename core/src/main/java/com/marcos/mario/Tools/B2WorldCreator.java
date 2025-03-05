@@ -12,8 +12,11 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.marcos.mario.Main;
 import com.marcos.mario.Screens.PantallaJugar;
+import com.marcos.mario.Sprites.Enemies.Abeja;
 import com.marcos.mario.Sprites.Enemies.Enemigo;
 import com.marcos.mario.Sprites.Enemies.Goomba;
+import com.marcos.mario.Sprites.Enemies.Pajaro;
+import com.marcos.mario.Sprites.Enemies.Pinchos;
 import com.marcos.mario.Sprites.Enemies.Turtle;
 import com.marcos.mario.Sprites.TileObjects.Ladrillo;
 import com.marcos.mario.Sprites.TileObjects.Moneda;
@@ -23,6 +26,10 @@ import com.marcos.mario.Sprites.TileObjects.Moneda;
 public class B2WorldCreator {
     private Array<Goomba> goombas;
     private Array<Turtle> turtles;
+    private Array<Abeja> abejas;
+    private Array<Pajaro> pajaros;
+
+
 
     public B2WorldCreator(PantallaJugar screen) {
         World world = screen.getWorld();
@@ -32,6 +39,49 @@ public class B2WorldCreator {
         FixtureDef fdef = new FixtureDef();
         Body body;
 
+
+
+        for (MapObject object : map.getLayers().get("Final").getObjects().getByType(RectangleMapObject.class)) {
+            Rectangle rect = ((RectangleMapObject) object).getRectangle();
+
+            bdef.type = BodyDef.BodyType.StaticBody;
+            bdef.position.set((rect.getX() + rect.getWidth() / 2) / Main.PPM, (rect.getY() + rect.getHeight() / 2) / Main.PPM);
+
+            body = world.createBody(bdef);
+
+            shape.setAsBox(rect.getWidth() / 2 / Main.PPM, rect.getHeight() / 2 / Main.PPM);
+            fdef.shape = shape;
+            fdef.isSensor = true; // Make it a sensor
+            fdef.filter.categoryBits = Main.OBJECT_BIT;
+            body.createFixture(fdef).setUserData("final");
+        }
+
+
+// Capa "Pinchos"
+        for (MapObject object : map.getLayers().get("Pinchos").getObjects().getByType(RectangleMapObject.class)) {
+            Rectangle rect = ((RectangleMapObject) object).getRectangle();
+
+            BodyDef pinchosBdef = new BodyDef();
+            pinchosBdef.type = BodyDef.BodyType.StaticBody;
+            pinchosBdef.position.set((rect.getX() + rect.getWidth() / 2) / Main.PPM,
+                (rect.getY() + rect.getHeight() / 2) / Main.PPM);
+
+            Body pinchosBody = world.createBody(pinchosBdef);
+
+            PolygonShape pinchosShape = new PolygonShape();
+            pinchosShape.setAsBox((rect.getWidth() / 2) / Main.PPM,
+                (rect.getHeight() / 2) / Main.PPM);
+
+            FixtureDef pinchosFdef = new FixtureDef();
+            pinchosFdef.shape = pinchosShape;
+            pinchosFdef.filter.categoryBits = Main.OBJETO_PINCHOS_BIT;
+            pinchosFdef.filter.maskBits = Main.MARIO_BIT; // Only Mario can collide with spikes
+            pinchosFdef.isSensor = true; // Set the spikes as sensors
+
+            pinchosBody.createFixture(pinchosFdef).setUserData(new Pinchos());
+
+            pinchosShape.dispose();
+        }
 
         for (MapObject object : map.getLayers().get("Muerte").getObjects().getByType(RectangleMapObject.class)) {
             Rectangle rect = ((RectangleMapObject) object).getRectangle();
@@ -72,9 +122,10 @@ public class B2WorldCreator {
         }
 
         // creacion suelo fixture
-        for (MapObject object : map.getLayers().get(4).getObjects().getByType(RectangleMapObject.class)) {
+        for (MapObject object : map.getLayers().get("Ground").getObjects().getByType(RectangleMapObject.class)) {
             Rectangle rect = ((RectangleMapObject) object).getRectangle();
 
+            new Moneda(screen, object);
             bdef.type = BodyDef.BodyType.StaticBody;
             bdef.position.set((rect.getX() + rect.getWidth() / 2) / Main.PPM, (rect.getY() + rect.getHeight() / 2) / Main.PPM);
 
@@ -104,25 +155,37 @@ public class B2WorldCreator {
 
 
         // creacion ladrillos fixture
-        for (MapObject object : map.getLayers().get("Bricks").getObjects().getByType(RectangleMapObject.class)) {
-
-
+        for(MapObject object : map.getLayers().get("Bricks").getObjects().getByType(RectangleMapObject.class)){
             new Ladrillo(screen, object);
         }
 
 
         // creacion monedas fixture
-        for (MapObject object : map.getLayers().get(4).getObjects().getByType(RectangleMapObject.class)) {
+        for(MapObject object : map.getLayers().get("Coins").getObjects().getByType(RectangleMapObject.class)){
 
             new Moneda(screen, object);
         }
 
         // creacion goombas
         goombas = new Array<Goomba>();
-        for (MapObject object : map.getLayers().get(6).getObjects().getByType(RectangleMapObject.class)) {
+        for (MapObject object : map.getLayers().get("Goombas").getObjects().getByType(RectangleMapObject.class)) {
             Rectangle rect = ((RectangleMapObject) object).getRectangle();
             goombas.add(new Goomba(screen, rect.getX() / Main.PPM, rect.getY() / Main.PPM));
         }
+
+
+        abejas = new Array<Abeja>();
+        for (MapObject object : map.getLayers().get("Abeja").getObjects().getByType(RectangleMapObject.class)) {
+            Rectangle rect = ((RectangleMapObject) object).getRectangle();
+            abejas.add(new Abeja(screen, rect.getX() / Main.PPM, rect.getY() / Main.PPM));
+        }
+
+        pajaros = new Array<>();
+        for (MapObject object : map.getLayers().get("Pajaro").getObjects().getByType(RectangleMapObject.class)) {
+            Rectangle rect = ((RectangleMapObject) object).getRectangle();
+            pajaros.add(new Pajaro(screen, rect.getX() / Main.PPM, rect.getY() / Main.PPM));
+        }
+
 
         // creacion tortugas
         turtles = new Array<Turtle>();
@@ -150,20 +213,38 @@ public class B2WorldCreator {
             fdef.filter.maskBits = Main.ENEMY_BIT; // Only collide with enemies
 
             body.createFixture(fdef).setUserData("goomba_bound");
+
+            // Ensure the body is always active
+            body.setActive(true);
         }
 
 
 
     }
 
+
+
+
+    
+
     public Array<Goomba> getGoombas() {
         return goombas;
+    }
+
+    public Array<Abeja> getAbejas() {
+        return abejas;
+    }
+
+    public Array<Pajaro> getPajaros() {
+        return pajaros;
     }
 
     public Array<Enemigo> getEnemigos() {
         Array<Enemigo> enemigos = new Array<Enemigo>();
         enemigos.addAll(goombas);
         enemigos.addAll(turtles);
+        enemigos.addAll(abejas);
+        enemigos.addAll(pajaros);
         return enemigos;
     }
 }

@@ -12,8 +12,7 @@ import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.marcos.mario.Main;
-
-
+import com.marcos.mario.Sprites.Mario;
 
 
 public class Hud implements Disposable {
@@ -30,9 +29,30 @@ public class Hud implements Disposable {
     private Label levelLabel;
     private Label worldLabel;
     private Label marioLabel;
+    private Mario player; // Referencia a Mario
 
-    public Hud(SpriteBatch sb){
-        worldTimer = 300;
+    private static int bestTime = 150; // Tiempo inicial alto para que cualquier tiempo sea mejor
+
+
+
+    public static int getBestTime() {
+        return bestTime;
+    }
+
+    // Actualizar el mejor tiempo si es necesario
+    public void updateBestTime() {
+        if (worldTimer < bestTime) {
+            bestTime = worldTimer;
+        }
+    }
+
+    public int getWorldTimer() {
+        return worldTimer;
+    }
+
+    public Hud(SpriteBatch sb) {
+
+        worldTimer = 150;
         timeCount = 0;
         score = 0;
 
@@ -48,7 +68,7 @@ public class Hud implements Disposable {
         timeLabel = new Label("TIME", new Label.LabelStyle(new BitmapFont(), Color.WHITE));
         levelLabel = new Label("1-1", new Label.LabelStyle(new BitmapFont(), Color.WHITE));
         worldLabel = new Label("WORLD", new Label.LabelStyle(new BitmapFont(), Color.WHITE));
-        marioLabel = new Label("MARIO", new Label.LabelStyle(new BitmapFont(), Color.WHITE));
+        marioLabel = new Label("MECO", new Label.LabelStyle(new BitmapFont(), Color.WHITE));
 
         table.add(marioLabel).expandX().padTop(10);
         table.add(worldLabel).expandX().padTop(10);
@@ -61,16 +81,24 @@ public class Hud implements Disposable {
         stage.addActor(table);
     }
 
-    public void update(float dt){
+    public void update(float dt) {
         timeCount += dt;
-        if(timeCount >= 1){
+        if (timeCount >= 1) {
             worldTimer--;
             countdownLabel.setText(String.format("%03d", worldTimer));
             timeCount = 0;
         }
+
+        if (worldTimer <= 0) {
+            player.hit(null); // Llama al método hit de Mario con null para simular la muerte
+        }
     }
 
-    public static void addScore(int value){
+    public void setPlayer(Mario player) {
+        this.player = player;
+    }
+
+    public static void addScore(int value) {
         score += value;
         scoreLabel.setText(String.format("%06d", score));
     }

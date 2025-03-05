@@ -5,8 +5,11 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.marcos.mario.Scenes.Hud;
 import com.marcos.mario.Screens.PantallaJugar;
 import com.marcos.mario.Screens.PantallaMenu;
+import com.marcos.mario.Tools.IdiomaManager;
+import com.marcos.mario.Tools.IdiomaManagerImpl;
 
 public class Main extends Game {
     public static final int V_WIDTH = 400; // Ancho de la ventana
@@ -27,11 +30,36 @@ public class Main extends Game {
     public static final short ESCALERA_BIT = 1024;
     public static final short TECHO_ESCALERA_BIT = 2048;
     public static final short MUERTE_BIT = 4096;
+    public static final short OBJETO_PINCHOS_BIT = 8192;
+    public static int currentMapNumber = 1;
+
+    private Hud hud;
 
 
     public SpriteBatch batch; // Usado para dibujar en todas las pantallas
 
     public static AssetManager manager; // Carga los recursos del juego
+
+    private IdiomaManager idiomaManager; // Manejador de idiomas
+
+    // 🔹 Nuevo constructor para recibir el IdiomaManager
+    public Main(IdiomaManager idiomaManager) {
+        this.idiomaManager = idiomaManager;
+    }
+
+    public IdiomaManager getIdiomaManager() {
+        return idiomaManager;
+    }
+
+    public void cambiarIdioma(String nuevoIdioma) {
+        idiomaManager = new IdiomaManagerImpl(nuevoIdioma);
+    }
+
+
+    public Hud getHud() {
+        return hud; // Método para obtener la instancia de Hud
+    }
+
 
     @Override
     public void create() {
@@ -48,8 +76,9 @@ public class Main extends Game {
         manager.load("audio/sounds/mariodie.wav", Sound.class);
         manager.finishLoading();
 
+        hud = new Hud(batch);
 
-        setScreen(new PantallaJugar(this)); // Muestra la pantalla del menú
+        setScreen(new PantallaMenu(this)); // Muestra la pantalla del menú
     }
 
     @Override
