@@ -184,6 +184,8 @@ public class PantallaOpciones implements Screen {
             // Asegúrate de que la pantalla de records se actualice
             pantallaRecords.actualizarRecords();
         }
+
+        Gdx.input.vibrate(500);
     }
 
 

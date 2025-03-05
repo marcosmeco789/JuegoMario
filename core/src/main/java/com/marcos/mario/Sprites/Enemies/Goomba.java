@@ -110,14 +110,14 @@ public class Goomba extends Enemigo {
         // Goomba head
         PolygonShape head = new PolygonShape();
         Vector2[] vertice = new Vector2[4];
-        vertice[0] = new Vector2(-5, 8).scl(1 / Main.PPM);
-        vertice[1] = new Vector2(5, 8).scl(1 / Main.PPM);
+        vertice[0] = new Vector2(-4, 8).scl(1 / Main.PPM);
+        vertice[1] = new Vector2(4, 8).scl(1 / Main.PPM);
         vertice[2] = new Vector2(-3, 3).scl(1 / Main.PPM);
         vertice[3] = new Vector2(3, 3).scl(1 / Main.PPM);
         head.set(vertice);
 
         fdef.shape = head;
-        fdef.restitution = 0.5f;
+        fdef.restitution = 0.2f;
         fdef.filter.categoryBits = Main.ENEMY_HEAD_BIT;
         b2body.createFixture(fdef).setUserData(this);
     }

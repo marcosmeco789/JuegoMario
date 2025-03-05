@@ -88,9 +88,12 @@ public class PantallaRecords implements Screen {
         // Verifica los tiempos leídos
         Gdx.app.log("PantallaRecords", "Tiempos leídos: Nivel 1 = " + bestTimeLevel1 + ", Nivel 2 = " + bestTimeLevel2);
 
+        String nivel = game.getIdiomaManager().getString("nivel");
+        String segundos = game.getIdiomaManager().getString("segundos");
+
         Image level1ImageActor = new Image(level1Image);
         bestTimeLabel1 = new Label(
-            "Nivel 1: " + (bestTimeLevel1 == 9999 ? "N/A" : bestTimeLevel1 + " segundos"),
+            nivel + " 1: " + (bestTimeLevel1 == 9999 ? "N/A" : bestTimeLevel1 + " " + segundos),
             labelStyle
         );
 
@@ -102,7 +105,7 @@ public class PantallaRecords implements Screen {
 
         Image level2ImageActor = new Image(level2Image);
         bestTimeLabel2 = new Label(
-            "Nivel 2: " + (bestTimeLevel2 == 9999 ? "N/A" : bestTimeLevel2 + " segundos"),
+            nivel + " 2: " + (bestTimeLevel2 == 9999 ? "N/A" : bestTimeLevel2 + " " + segundos),
             labelStyle
         );
 
@@ -110,6 +113,7 @@ public class PantallaRecords implements Screen {
         table.add(bestTimeLabel2).left();
         table.row().padTop(20f);
     }
+
 
 
     @Override

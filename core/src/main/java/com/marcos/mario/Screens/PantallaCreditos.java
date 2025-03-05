@@ -55,15 +55,17 @@ public class PantallaCreditos implements Screen {
         labelStyle = new Label.LabelStyle(font, Color.WHITE);
 
         // Crear y añadir las etiquetas
-        Label label1 = new Label("Hecho por: Marcos Gonzalez Ferreira", labelStyle);
-        Label label2 = new Label("Fuente de letra por: TheWolfBunny", labelStyle);
-        Label label3 = new Label("Assets por: VEXED", labelStyle);
-        Label label4 = new Label("Iconos por: Rad Potato", labelStyle);
+        Label label1 = new Label(game.getIdiomaManager().getString("hecho"), labelStyle);
+        Label label2 = new Label(game.getIdiomaManager().getString("fuente"), labelStyle);
+        Label label3 = new Label(game.getIdiomaManager().getString("assets"), labelStyle);
+        Label label4 = new Label(game.getIdiomaManager().getString("iconos"), labelStyle);
+        Label label5 = new Label(game.getIdiomaManager().getString("musica"), labelStyle);
 
         table.add(label1).padBottom(10f).row();
         table.add(label2).padBottom(10f).row();
         table.add(label3).padBottom(10f).row();
         table.add(label4).padBottom(10f).row();
+        table.add(label5).padBottom(10f).row();
 
         // Añadir el botón de "volver" con texto
         Label backLabel = new Label(game.getIdiomaManager().getString("volver"), new Label.LabelStyle(font, Color.BLACK));
@@ -79,6 +81,7 @@ public class PantallaCreditos implements Screen {
         table.row().padTop(20f);
         table.add(backLabel).colspan(2).center();
     }
+
     @Override
     public void render(float delta) {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);

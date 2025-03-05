@@ -13,4 +13,11 @@
     <string name="reiniciarRecords">reset records</string>
     <string name="idioma">select language</string>
     <string name="volver">return</string>
+    <string name="segundos">seconds</string>
+    <string name="nivel">level</string>
+    <string name="hecho">Made by: Marcos Gonzalez Ferreira</string>
+    <string name="fuente">Font by: TheWolfBunny</string>
+    <string name="assets">Assets by: VEXED</string>
+    <string name="iconos">Icons by: Rad Potato</string>
+    <string name="musica">Music by: joegallagher</string>
 </resources>

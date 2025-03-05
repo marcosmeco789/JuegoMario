@@ -214,7 +214,7 @@ public class PantallaJugar implements Screen {
         Gdx.gl.glClear(Gdx.gl.GL_COLOR_BUFFER_BIT);
 
         renderer.render();
-        b2dr.render(world, gamecam.combined);
+        //b2dr.render(world, gamecam.combined);
 
         game.batch.setProjectionMatrix(gamecam.combined);
         game.batch.begin();

@@ -277,6 +277,7 @@ public class Mario extends Sprite {
                     fixture.setFilterData(filter);
                 }
                 b2body.applyLinearImpulse(new Vector2(0, 4f), b2body.getWorldCenter(), true);
+                Gdx.input.vibrate(500);
             }
         }
 
